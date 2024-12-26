@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const createTransporter = require('../services/mailer');
 
 // Register Function
 exports.register = async (req, res) => {
@@ -55,9 +56,50 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;  // Extract email from the request body
+
+    try {
+        // Check if the user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate a password reset token (valid for 1 hour)
+        const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        // Create the reset URL (with the reset token embedded in it)
+        const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+        // Use the transporter singleton to send the reset email
+        const transporter = createTransporter();
+
+        const mailOptions = {
+            from: process.env.GMAIL_USER,        // Sender's email (use your Gmail account)
+            to: user.email,                      // Recipient's email (user's email)
+            subject: 'Password Reset Request',   // Email subject
+            text: `Click the following link to reset your password: ${resetUrl}`,
+        };
+
+        // Send the email with the reset URL
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log('Error sending email:', error);
+                return res.status(500).json({ message: 'Error sending email', error });
+            }
+            res.json({ message: 'Password reset link sent to your email' });
+        });
+    } catch (error) {
+        console.error('Error in forgotPassword:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Login Function
 exports.resetPassword = async (req, res) => {
-    const { token, newPassword } = req.body;
+    const { token } = req.params;
+    const { newPassword } = req.body;
 
     // Verify the JWT and get the userId
     try {
