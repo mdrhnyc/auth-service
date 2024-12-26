@@ -26,12 +26,15 @@ Retrieves the authenticated user's profile.
    git clone https://github.com/mdrhnyc/auth-service.git
 
 2. Navigate to the project folder:
+    ```bash
     cd auth-service
 
 3. Install dependencies:
+    ```bash
     npm install
 
 4. Run the app
+    ```bash
     npm start
 
 The app will now be running on http://localhost:3000 by default.
