@@ -1,25 +1,27 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
+require('dotenv').config();  // Make sure your environment variables are loaded
 
-let transporter;
+// Set your SendGrid API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-function createTransporter() {
-    //console.log(process.env.GMAIL_USER);
-    //console.log(process.env.GMAIL_PASSWORD);
-    // Check if the transporter is already created; if not, create it
-    if (!transporter) {
-        transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: {
-                user: process.env.GMAIL_USER,     // Your Gmail email address (set in .env)
-                pass: process.env.GMAIL_PASSWORD, // Your Gmail app password (set in .env)
-            },
-        });
-    }
+// Send email function
+const sendMail = async (to, subject, text) => {
+  const msg = {
+    to: to, // Recipient's email
+    from: process.env.SENDGRID_FROM_EMAIL_ADDRESS, // Replace with your verified SendGrid email
+    subject: subject,
+    text: text,  // Email content (plain text)
+  };
 
-    // Return the existing transporter instance
-    return transporter;
-}
+  try {
+    // Send the email via SendGrid
+    const response = await sgMail.send(msg);
+    console.log('Email sent successfully', response);
+    return response;
+  } catch (error) {
+    console.error('Error sending email', error);
+    throw error;
+  }
+};
 
-module.exports = createTransporter;
+module.exports = sendMail;
