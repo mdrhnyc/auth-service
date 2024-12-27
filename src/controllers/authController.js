@@ -182,24 +182,8 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.profile = async (req, res) => {
-    // Get the JWT from the Authorization header
-    const token = req.headers['authorization']?.split(' ')[1];  // Format: "Bearer <token>"
-
-    if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
-    }
-
     try {
-        // Verify the JWT token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Find the user by the decoded userId (from the token)
-        const user = await User.findById(decoded.userId);
-
-        // If the user does not exist, return a 404 error
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        const user = req.user;
 
         // Return the user profile (email, or any other fields you need)
         res.json({
@@ -209,7 +193,6 @@ exports.profile = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        // Handle error (e.g., invalid or expired token)
-        res.status(401).json({ message: 'Invalid or expired token' });
+        res.status(500).json({ message: 'Error fetching user profile' });
     }
 };
