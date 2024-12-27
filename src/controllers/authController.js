@@ -28,6 +28,70 @@ exports.register = async (req, res) => {
     }
 };
 
+exports.emailVerification = async (req, res) => {
+    const { email } = req.body;  // Extract email from the request body
+
+    try {
+        // Check if the user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+    
+        // Generate a verification token (valid for 1 hour)
+        const verificationToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    
+        // Store the verification token and its expiration date
+        user.verificationToken = verificationToken;
+        user.verificationTokenExpiration = Date.now() + 3600000;  // Token expires in 1 hour
+        await user.save();
+    
+        // Create the verification URL
+        const verificationUrl = `http://localhost:3000/auth/verify-email/${verificationToken}`;
+        
+        // Send the verification email
+        const subject = 'Email Verification';
+        const text = `Click the following link to verify your email: ${verificationUrl}`;
+        await sendMail(user.email, subject, text);  // Send via SendGrid
+    
+        res.json({ message: 'Verification email sent' });
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+        res.status(500).json({ message: 'Error sending email' });
+    }
+};
+
+exports.verifyEmail = async (req, res) => {
+    const { token } = req.params;
+
+    try {
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Find the user by userId
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if the token has expired
+        if (user.verificationTokenExpiration < Date.now()) {
+        return res.status(400).json({ message: 'Token has expired' });
+        }
+
+        // Verify the user's email
+        user.emailVerified = true;
+        user.verificationToken = undefined;  // Clear the verification token
+        user.verificationTokenExpiration = undefined;  // Clear the expiration field
+        await user.save();
+
+        res.json({ message: 'Email successfully verified' });
+    } catch (error) {
+        console.error('Error verifying email:', error);
+        res.status(400).json({ message: 'Invalid or expired token' });
+    }
+};
+
 // Login Function
 exports.login = async (req, res) => {
     try {
@@ -71,7 +135,7 @@ exports.forgotPassword = async (req, res) => {
         const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         // Create the reset URL (with the reset token embedded in it)
-        const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+        const resetUrl = `http://localhost:3000/auth/reset-password/${resetToken}`;
 
         // Create the email content
         const subject = 'Password Reset Request';

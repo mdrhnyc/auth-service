@@ -20,10 +20,11 @@ const userSchema = new mongoose.Schema({
     },
     verificationToken: {
         type: String,
-        required: true,
+        required: false,
     },
     verificationTokenExpiration: {
         type: Date,
+        required: false,
     },
 });
 
