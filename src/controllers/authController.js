@@ -203,7 +203,8 @@ exports.profile = async (req, res) => {
 
         // Return the user profile (email, or any other fields you need)
         res.json({
-            email: user.email
+            email: user.email,
+            has_verified_email: user.emailVerified
         });
 
     } catch (error) {
