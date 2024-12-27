@@ -4,19 +4,25 @@ This is a simple authentication service built using Express.
 
 ## Routes
 
-### POST /register
+### POST /auth/register
 Registers a new user.
 
-### POST /login
+### POST /auth/login
 Logs in a user and returns an authentication token.
 
-### POST /reset-password/:token
+### POST /auth/reset-password/:token
 Resets the user's password using the provided token.
 
-### POST /forgot-password
+### POST /auth/send-verification-email
+Send the user verification email.
+
+### POST /auth/verify-email/:token
+Verify user's email using the provided token.
+
+### POST /auth/forgot-password
 Sends a password reset email with a token to the user’s email address.
 
-### GET /profile
+### GET /auth/profile
 Retrieves the authenticated user's profile.
 
 ## How to Run the App
