@@ -25,6 +25,9 @@ Sends a password reset email with a token to the user’s email address.
 ### GET /auth/profile
 Retrieves the authenticated user's profile.
 
+### DELETE /auth/profile
+Deletes the authenticated user's profile
+
 ## How to Run the App
 
 1. Clone the repository:
