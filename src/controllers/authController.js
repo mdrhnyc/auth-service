@@ -196,3 +196,24 @@ exports.profile = async (req, res) => {
         res.status(500).json({ message: 'Error fetching user profile' });
     }
 };
+
+
+exports.deleteProfile = async (req, res) => {
+    try {
+        const user = req.user;
+
+        // Delete the user from MongoDB
+        const deletedUser = await User.findByIdAndDelete(user._id);
+
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Respond that the user was deleted successfully
+        res.json({ message: 'Profile deleted successfully' });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Error deleting user profile' });
+    }
+};
